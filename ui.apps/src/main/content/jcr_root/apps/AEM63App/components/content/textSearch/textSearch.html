@@ -1,0 +1,12 @@
+
+
+<sly data-sly-use.model="com.aem.community.core.models.SearchModel">
+    <p data-sly-test="${model.searchText}">Text property searchText: ${model.searchText}</p>
+    <p data-sly-test="${model.searchPath}">Text property searchPath: ${model.searchPath}</p>
+    <p data-sly-test="${model.typeSearch}">Text property typeSearch: ${model.typeSearch}</p>
+    <ul data-sly-test="${model.foundLinks}" data-sly-list="${model.foundLinks}">
+        <li><a href="http://localhost:4502/crx/de/index.jsp#${item}">${item}</a></li>
+    </ul>
+    <h3 data-sly-test="${!model.foundLinks}">Nothing</h3>
+</sly>
+
