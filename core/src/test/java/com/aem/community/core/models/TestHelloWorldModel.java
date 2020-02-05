@@ -20,6 +20,7 @@ import org.apache.sling.settings.SlingSettingsService;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.UUID;
 
 import static org.junit.Assert.assertNotNull;
@@ -73,5 +74,17 @@ public class TestHelloWorldModel {
         String destrelativepath = parts[(parts.length - 1)];
         String destpath = destnodePath + "/" + parts[(parts.length - 1)];
         System.out.println(destpath);
+    }
+
+    @Test
+    public void testSplitString() {
+        String nodePath = "/content/AEM63App/en/jcr:content/par/text" ;
+        String[] parts = nodePath.split("/");
+        String path = nodePath.substring(0 , nodePath.lastIndexOf("jcr:content"));
+        String node = "/title";
+        String nameCopyableNode = nodePath.substring(nodePath.lastIndexOf("/") , nodePath.length());
+        String nodeName = node.substring(1);
+        String destrelativepath = parts[(parts.length - 2)];
+        System.out.println(nodeName);
     }
 }

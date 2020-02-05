@@ -42,62 +42,57 @@ public class ChangeListener implements EventHandler {
 
     @Override
     public void handleEvent(Event event) {
-        String path = (String) event.getProperty("path");
-        System.out.println(path);
         counter++;
-        String templatePath = "/apps/AEM63App/templates/page-home";
-        String pagePath = "/content/AEM63App/en/";
-        String pageTitle = "AEM home page " + counter;
-        String pageName = "test_" + counter;
-        List<String> listPaths = new ArrayList<>();
-        String user = null;
-
 
         ResourceResolver resourceResolver = null;
         try {
+            String path = (String) event.getProperty("path");
+
             resourceResolver = getResourceResolver();
+
+            Resource resource = resourceResolver.getResource(path);
+            Node parentNode = resource.adaptTo(Node.class);
+            Node parentParNode = parentNode.getNode("par");
+
+            String templatePath = "/apps/AEM63App/templates/page-home";
+            String pageName = "en_" + counter;
+            String pageTitle = String.valueOf(parentNode.getProperty("jcr:title").getValue()) + " 1." + counter;
+            String pagePath = path.substring(0, path.lastIndexOf("jcr:content"));
+
 
             //create a page manager instance
             pageManager = resourceResolver.adaptTo(PageManager.class);
-
             newPage = pageManager.create(pagePath, pageName, templatePath, pageTitle);
 
             Node newNode = newPage.adaptTo(Node.class);
             Node newParNode = newNode.getNode("jcr:content").getNode("par");
             String newParNodePath = newParNode.getPath();
 
-            Resource resource = resourceResolver.getResource(path);
-            Node parentNode = resource.adaptTo(Node.class);
-            Node oldParNode = parentNode.getNode("par");
-            String oldParNodePath = oldParNode.getPath();
-
             Session session = resourceResolver.adaptTo(Session.class);
-
             Workspace workspace = session.getWorkspace();
 
-            NodeIterator nodeItem = oldParNode.getNodes();
+            NodeIterator nodeItem = parentParNode.getNodes();
 
             while (nodeItem.hasNext()) {
-                javax.jcr.Node node = nodeItem.nextNode();
+                javax.jcr.Node childNode = nodeItem.nextNode();
+                String childNodePathPath = childNode.getPath();
 
-                String[] parts = node.getPath().split("/");
-                String destrelativepath = parts[(parts.length - 1)];
-                String destpath = newParNodePath + "/" + parts[(parts.length - 1)];
-                if (!isNewPageHasCopyableNode(newParNode , destrelativepath)) {
-                    workspace.copy(node.getPath(), destpath);
+                String nameCopyableNode = childNodePathPath.substring(childNodePathPath.lastIndexOf("/"), childNodePathPath.length());
+                String pathToCopyableNode = newParNodePath + nameCopyableNode;
+
+                if (!isNewPageHasCopyableNode(newParNode, nameCopyableNode)) {
+                    workspace.copy(childNodePathPath, pathToCopyableNode);
                 }
-                listPaths.add(destpath);
             }
             session.logout();
         } catch (LoginException | WCMException | RepositoryException e) {
             e.printStackTrace();
         }
-
-        System.out.println();
     }
 
-    private boolean isNewPageHasCopyableNode(Node newNode, String destpath) throws RepositoryException {
-        return newNode.hasNode(destpath) ;
+    private boolean isNewPageHasCopyableNode(Node newNode, String nameCopyableNode) throws RepositoryException {
+        String nameOfNode = nameCopyableNode.substring(1);
+        return newNode.hasNode(nameOfNode);
     }
 
     private ResourceResolver getResourceResolver() throws LoginException {
