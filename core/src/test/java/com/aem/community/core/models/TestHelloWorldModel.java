@@ -22,6 +22,8 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -86,5 +88,22 @@ public class TestHelloWorldModel {
         String nodeName = node.substring(1);
         String destrelativepath = parts[(parts.length - 2)];
         System.out.println(nodeName);
+
+        String removedNodeName = nodePath.substring((nodePath.lastIndexOf("/") + 1));
+        System.out.println(removedNodeName);
+
+    }
+
+    @Test
+    public void testRegexp() {
+        String pathToMove = "/content";
+        Pattern pattern = Pattern.compile("^(\\/content)");
+        Matcher matcher = pattern.matcher(pathToMove);
+        System.out.println(matcher.find());
+
+        String pagePath = "/content/AEM63App/test";
+        System.out.println(pagePath.substring(0 , pagePath.lastIndexOf("/") ));
+        System.out.println(pathToMove.equals(pagePath.substring(0 , pagePath.lastIndexOf("/") - 1 )));
+
     }
 }

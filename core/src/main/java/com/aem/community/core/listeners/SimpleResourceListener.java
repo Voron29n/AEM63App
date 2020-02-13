@@ -15,25 +15,13 @@
  */
 package com.aem.community.core.listeners;
 
-import com.day.cq.wcm.api.Page;
-import com.day.cq.wcm.api.PageManager;
 import org.apache.sling.api.SlingConstants;
-import org.apache.sling.api.resource.LoginException;
-import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.osgi.framework.Constants;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.jcr.Session;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * A service to demonstrate how changes in the resource tree
@@ -79,18 +67,7 @@ public class SimpleResourceListener implements EventHandler {
         logger.debug("Resource event: {} at: {}", event.getTopic(), event.getProperty(SlingConstants.PROPERTY_PATH));
     }
 
-    private Session getSession() throws LoginException {
-        Session session = null;
 
-        Map<String, Object> param = new HashMap<String, Object>();
-        param.put(ResourceResolverFactory.SUBSERVICE, SERVICE_USER_NAME);
-
-        resourceResolver = resolverFactory.getServiceResourceResolver(param);
-
-        session = resourceResolver.adaptTo(Session.class);
-
-        return session;
-    }
 
 //    private Page createPage(Page page){
 //

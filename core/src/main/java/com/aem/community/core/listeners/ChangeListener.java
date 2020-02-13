@@ -7,43 +7,45 @@ import org.apache.sling.api.resource.LoginException;
 import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ResourceResolver;
 import org.apache.sling.api.resource.ResourceResolverFactory;
-import org.osgi.framework.Constants;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.osgi.service.event.Event;
-import org.osgi.service.event.EventConstants;
 import org.osgi.service.event.EventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.jcr.*;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Remember that you must set http://localhost:4502/system/console/configMgr 5000 into 	Timeout
  */
 
-@Component(service = EventHandler.class,
-        immediate = true,
-        property = {
-                Constants.SERVICE_DESCRIPTION + "=Demo to listen on changes in the resource tree",
-                EventConstants.EVENT_TOPIC + "=org/apache/sling/api/resource/Resource/*",
-                EventConstants.EVENT_FILTER + "=(&(path=/content/AEM63App/en/jcr:content)(resourceType=*/page))"
-        })
+//@Component(service = EventHandler.class,
+//        immediate = true,
+//        property = {
+//                Constants.SERVICE_DESCRIPTION + "=Demo to listen on changes in the resource tree",
+//                EventConstants.EVENT_TOPIC + "=org/apache/sling/api/resource/Resource/*",
+//                EventConstants.EVENT_FILTER + "=(&(path=/content/AEM63App/en/jcr:content)(resourceType=*/page))"
+//        })
 public class ChangeListener implements EventHandler {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     private static int counter;
     private final String SERVICE_USER_NAME = "testuser";
+
     @Reference
     private ResourceResolverFactory resolverFactory;
+
     private Page newPage;
     private PageManager pageManager;
 
     @Override
     public void handleEvent(Event event) {
         counter++;
-
+        logger.info(String.format("value of counter is %d", counter));
         ResourceResolver resourceResolver = null;
         try {
             String path = (String) event.getProperty("path");

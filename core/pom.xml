@@ -123,5 +123,11 @@
 <!--            <artifactId>cq-dam-api</artifactId>-->
 <!--        </dependency>-->
 
+        <!-- CUSTOM -->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.commons</groupId>-->
+<!--            <artifactId>commons-lang3</artifactId>-->
+<!--        </dependency>-->
+
     </dependencies>
 </project>

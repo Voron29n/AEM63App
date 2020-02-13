@@ -1,0 +1,149 @@
+package com.epam.aem.core.listeners;
+
+import com.day.cq.wcm.api.*;
+import com.google.common.collect.Iterators;
+import org.apache.sling.api.resource.Resource;
+import org.apache.sling.api.resource.ResourceResolver;
+import org.apache.sling.api.resource.ResourceResolverFactory;
+import org.apache.sling.event.jobs.Job;
+import org.apache.sling.event.jobs.JobManager;
+import org.apache.sling.event.jobs.consumer.JobConsumer;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.event.Event;
+import org.osgi.service.event.EventConstants;
+import org.osgi.service.event.EventHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.jcr.version.Version;
+import javax.jcr.version.VersionHistory;
+import javax.jcr.version.VersionManager;
+import java.util.*;
+
+@Component(service = {EventHandler.class, JobConsumer.class},
+        immediate = true,
+        configurationPolicy = ConfigurationPolicy.OPTIONAL,
+        property = {
+                EventConstants.EVENT_TOPIC + "=" + PageEvent.EVENT_TOPIC,
+                JobConsumer.PROPERTY_TOPICS + "=" + "aem/custom/event"
+        })
+public class CustomEventHandler implements EventHandler, JobConsumer {
+
+    private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+
+    @Reference
+    JobManager jobManager;
+    @Reference
+    private ResourceResolverFactory resourceResolverFactory;
+    private ResourceResolver resourceResolver;
+    private Resource resource;
+    private PageManager pageManager = null;
+
+    @Override
+    public void handleEvent(Event event) {
+        PageEvent pageEvent = PageEvent.fromEvent(event);
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("pageEvent", pageEvent);
+        jobManager.addJob("aem/custom/event", properties);
+    }
+
+    @Override
+    public JobResult process(Job job) {
+        PageEvent pageEvent = (PageEvent) job.getProperty("pageEvent");
+
+        try {
+            if (pageEvent != null && pageEvent.isLocal()) {
+                Iterator<PageModification> modificationsIterator = pageEvent.getModifications();
+                while (modificationsIterator.hasNext()) {
+                    PageModification modification = modificationsIterator.next();
+
+                    if (PageModification.ModificationType.MODIFIED.equals(modification.getType())) {
+                        createNewVersionPage(modification.getPath());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error : ", e);
+        }
+        return JobResult.OK;
+    }
+
+    void createNewVersionPage(String pathPage){
+        pageManager = getPageManager();
+        Page page = pageManager.getContainingPage(resourceResolver.getResource(pathPage));
+        resource = page.getContentResource();
+        Node nodePage = null;
+        VersionManager vmgr = null;
+        try {
+
+            // clear history
+            if (false) {
+                nodePage = page.getContentResource().adaptTo(Node.class);
+                vmgr = getVersionManager(resource);
+                VersionHistory vh = vmgr.getVersionHistory(nodePage.getPath());
+                Iterator<Version> it = vh.getAllVersions();
+                String baseVersion = vmgr.getBaseVersion(nodePage.getPath()).getName();
+                while (it.hasNext()) {
+                    Version currentVersion = it.next();
+                    String versionName = currentVersion.getName();
+                    if (!versionName.equals("jcr:rootVersion") && !versionName.equals(baseVersion)) {
+                        vh.removeVersion(versionName);
+                    }
+                }
+            }
+
+            if (checkTermsResource()){
+                nodePage = page.getContentResource().adaptTo(Node.class);
+                vmgr = getVersionManager(resource);
+
+                Iterator<Version> cq_containerVersions = Objects.requireNonNull(vmgr.getVersionHistory(nodePage.getPath()).getAllVersions());
+                String lastVersionName = Iterators.getLast(cq_containerVersions).getName();
+                System.out.println("lastversion name : " + lastVersionName);
+
+                System.out.println("base version:" + vmgr.getBaseVersion(nodePage.getPath()).getName());
+
+                vmgr.checkpoint(nodePage.getPath());
+
+                cq_containerVersions = Objects.requireNonNull(vmgr.getVersionHistory(nodePage.getPath()).getAllVersions());
+                lastVersionName = Iterators.getLast(cq_containerVersions).getName();
+                System.out.println("lastversion name : " + lastVersionName);
+
+                System.out.println("base version:" + vmgr.getBaseVersion(nodePage.getPath()).getName());
+
+            }
+        } catch (RepositoryException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private PageManager getPageManager() {
+        try {
+            resourceResolver = resourceResolverFactory.getAdministrativeResourceResolver(null);
+        } catch (org.apache.sling.api.resource.LoginException e) {
+            e.printStackTrace();
+        }
+        return pageManager = resourceResolver.adaptTo(PageManager.class);
+    }
+
+    private boolean checkTermsResource() throws RepositoryException {
+        boolean isCQ_PAGE = resource.adaptTo(Node.class).getDefinition().getDeclaringNodeType().isNodeType(NameConstants.NT_PAGE);
+        boolean hasDescription = resource.getValueMap().containsKey(NameConstants.PN_DESCRIPTION);
+
+        return isCQ_PAGE && hasDescription;
+    }
+
+    private VersionManager getVersionManager(Resource resource) {
+        try {
+            return resource.getResourceResolver().adaptTo(Session.class).getWorkspace().getVersionManager();
+        } catch (RepositoryException e) {
+            logger.error("Error receiving last version of resource [ {} ]", resource.getName());
+        }
+        return null;
+    }
+
+}
