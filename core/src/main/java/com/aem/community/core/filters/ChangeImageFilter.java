@@ -48,6 +48,7 @@ public class ChangeImageFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
+
         final SlingHttpServletRequest slingRequest = (SlingHttpServletRequest) servletRequest;
         final SlingHttpServletResponse slingResponse = (SlingHttpServletResponse) servletResponse;
 

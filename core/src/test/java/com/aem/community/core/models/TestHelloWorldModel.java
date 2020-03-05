@@ -15,20 +15,19 @@
  */
 package com.aem.community.core.models;
 
-import junitx.util.PrivateAccessor;
-import org.apache.sling.settings.SlingSettingsService;
+import org.apache.jackrabbit.oak.commons.PathUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.UUID;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 /**
  * Simple JUnit test verifying the HelloWorldModel
@@ -102,8 +101,22 @@ public class TestHelloWorldModel {
         System.out.println(matcher.find());
 
         String pagePath = "/content/AEM63App/test";
-        System.out.println(pagePath.substring(0 , pagePath.lastIndexOf("/") ));
-        System.out.println(pathToMove.equals(pagePath.substring(0 , pagePath.lastIndexOf("/") - 1 )));
+        System.out.println(PathUtils.getAncestorPath(pagePath, 3));
+//        System.out.println(pagePath.substring(0 , pagePath.lastIndexOf("/") ));
+//        System.out.println(pathToMove.equals(pagePath.substring(0 , pagePath.lastIndexOf("/") - 1 )));
 
+    }
+
+    @Test
+    public void testLocalTime() {
+        System.out.println(LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)));
+        System.out.println(LocalTime.now().format(DateTimeFormatter.ofLocalizedTime(FormatStyle.MEDIUM)));
+    }
+
+    @Test
+    public void testStringToBoolean() {
+        String bol = "true";
+        boolean bol1 = Boolean.parseBoolean(bol);
+        System.out.println(bol1);
     }
 }
